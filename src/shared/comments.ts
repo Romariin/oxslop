@@ -28,6 +28,9 @@ export const isDirectiveComment = (comment: Comment): boolean => {
   const { value } = comment;
 
   if (comment.type === "Block" && value.startsWith("!")) return true;
+  if (comment.type === "Block" && /^[@#]__(?:PURE|NO_SIDE_EFFECTS)__$/.test(value.trim()))
+    return true;
+
   if (comment.type === "Line" && /^\/\s*</.test(value)) return true;
   const text = value.trimStart();
 

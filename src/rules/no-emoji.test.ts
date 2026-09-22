@@ -29,6 +29,11 @@ tester.run("oxslop/no-emoji", rule, {
     { name: "flag", code: 'const s = "🇫🇷";', errors: [{ messageId: "emoji" }] },
     { name: "keycap", code: 'const s = "1️⃣";', errors: [{ messageId: "emoji" }] },
     {
+      name: "keycap without variation selector",
+      code: 'const s = "1\u20e3";',
+      errors: [{ messageId: "emoji", data: { emoji: "1\u20e3" } }],
+    },
+    {
       name: "multiple",
       code: 'const s = "🎉🎉";',
       errors: [{ messageId: "emoji" }, { messageId: "emoji" }],

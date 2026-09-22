@@ -67,9 +67,9 @@ export default defineRule({
       },
       TSMappedType(node) {
         const keys = unionMembers(context, node.constraint);
-        const dictionary = keys.every(
-          (key) => key.type === "TSStringKeyword" || key.type === "TSNumberKeyword",
-        );
+        const dictionary =
+          keys.length > 0 &&
+          keys.every((key) => key.type === "TSStringKeyword" || key.type === "TSNumberKeyword");
 
         if (dictionary) check(node, node.typeAnnotation ?? undefined);
       },

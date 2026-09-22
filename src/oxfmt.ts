@@ -37,7 +37,7 @@ export const DEFAULT_IGNORE_PATTERNS = [
   "**/.opencode/**",
 ];
 
-export interface OxfmtPreset {
+export type OxfmtPreset = {
   printWidth: number;
   tabWidth: number;
   useTabs: boolean;
@@ -52,7 +52,7 @@ export interface OxfmtPreset {
   sortImports?: Record<string, never>;
   sortTailwindcss?: Record<string, never>;
   ignorePatterns: string[];
-}
+};
 
 export const oxfmt = (options: OxfmtOptions = {}): OxfmtPreset => {
   const preset: OxfmtPreset = {

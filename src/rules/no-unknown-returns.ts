@@ -1,3 +1,4 @@
+import { isGlobalName } from "../shared/globals.ts";
 import { defineRule } from "../shared/rule.ts";
 import type { ESTree } from "../shared/rule.ts";
 import { FUNCTION_SELECTOR, referenceName, unionMembers } from "../shared/types.ts";
@@ -24,14 +25,28 @@ export default defineRule({
     schema: [],
   },
   createOnce(context) {
-    const findUnknown = (type: ESTree.TSType): string | undefined => {
+    const findUnknown = (type: ESTree.TSType, seen?: Set<ESTree.TSType>): string | undefined => {
+      if (seen?.has(type)) return undefined;
+      seen?.add(type);
+
       for (const member of unionMembers(context, type)) {
         if (member.type === "TSUnknownKeyword") return "unknown";
-        if (member.type !== "TSTypeReference") continue;
+        if (
+          member.type !== "TSTypeReference" ||
+          member.typeName.type !== "Identifier" ||
+          !isGlobalName(context, member.typeName)
+        ) {
+          continue;
+        }
+
         const name = referenceName(member.typeName);
         const argument = member.typeArguments?.params[0];
 
-        if (PROMISE_LIKE.includes(name) && argument && findUnknown(argument))
+        if (
+          PROMISE_LIKE.includes(name) &&
+          argument &&
+          findUnknown(argument, seen ?? new Set([type]))
+        )
           return `${name}<unknown>`;
       }
 

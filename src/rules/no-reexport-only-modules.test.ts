@@ -17,6 +17,8 @@ tester.run("oxslop/no-reexport-only-modules", rule, {
     "export default 42;",
     "import { a } from './a'; export default a(); ",
     "import { a } from './a';",
+    "export {} from './register';",
+    "export {} from './register'; export { a } from './a';",
     {
       code: "export * from './a';",
       filename: "src/index.ts",

@@ -26,6 +26,21 @@ tester.run("oxslop/no-known-value-widening", rule, {
     "type Guard = (value: unknown) => boolean;",
   ],
   invalid: [
+    {
+      name: "recursive dictionary does not hide nearby widening",
+      code: "type Dict = { [key: string]: Dict }; const d: Dict = {};\nconst value: unknown = { id: 1 };",
+      errors: [{ ...error, line: 2 }],
+    },
+    {
+      name: "recursive wrapper does not hide nearby widening",
+      code: "type W = Readonly<W>; const w: W = {};\nconst value: unknown = { id: 1 };",
+      errors: [{ ...error, line: 2 }],
+    },
+    {
+      name: "angle bracket const assertion preserves known value",
+      code: "const x: unknown = <const>{ a: 1 };",
+      errors: [error],
+    },
     { name: "unknown const", code: "const input: unknown = { id: 1 };", errors: [error] },
     { name: "object const", code: "const input: object = new Box();", errors: [error] },
     { name: "empty type literal", code: "const input: {} = 'text';", errors: [error] },

@@ -46,6 +46,11 @@ tester.run("oxslop/require-safety-comment-for-type-assertion", rule, {
       errors: [error],
     },
     {
+      name: "JSDoc decoration is not a safety justification",
+      code: "/** SAFETY:\n *\n */\nconst x = y as T;",
+      errors: [error],
+    },
+    {
       name: "marker without colon",
       code: "// SAFETY created above\nconst root = node as HTMLElement;",
       errors: [error],

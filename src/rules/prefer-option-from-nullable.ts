@@ -10,15 +10,17 @@ import { defineRule } from "../shared/rule.ts";
  * by source text. Single-sided checks (`=== null` alone) are reported too, although
  * `Option.fromNullable` widens them to cover both `null` and `undefined`.
  *
- * The autofix runs only when the subject is a plain identifier, `this`, or a member chain without
- * calls, and only when `Option` is referenced through an object (`Option.some`), so the same
- * binding text can be reused for `fromNullable`.
+ * The autofix runs only when the test covers both null and undefined, the subject is a plain
+ * identifier or `this`, and `Option` is referenced through an object (`Option.some`).
+ * Member reads may invoke getters, so reducing their evaluation count is not safe.
  */
 
 interface NullishTest {
   subject: ESTree.Expression;
   /** `true` for `x == null`, `false` for `x != null`. */
   nullish: boolean;
+  /** Bit mask: null = 1, undefined = 2, both = 3. */
+  checks: number;
 }
 
 const unwrap = (node: ESTree.Expression): ESTree.Expression =>
@@ -57,7 +59,13 @@ export default defineRule({
       const subject = isNullish(right) ? left : isNullish(left) ? right : undefined;
 
       if (subject === undefined || isNullish(subject)) return undefined;
-      return { subject, nullish: operator === "===" || operator === "==" };
+      const nullishValue = isNullish(right) ? right : left;
+
+      return {
+        subject,
+        nullish: operator === "===" || operator === "==",
+        checks: strictEq ? (nullishValue.type === "Literal" ? 1 : 2) : 3,
+      };
     };
 
     const nullishTest = (test: ESTree.Expression): NullishTest | undefined => {
@@ -72,7 +80,9 @@ export default defineRule({
         return undefined;
 
       if (test.operator !== (left.nullish ? "||" : "&&")) return undefined;
-      return getText(left.subject) === getText(right.subject) ? left : undefined;
+      return getText(left.subject) === getText(right.subject)
+        ? { ...left, checks: left.checks | right.checks }
+        : undefined;
     };
 
     const optionCall = (
@@ -85,20 +95,6 @@ export default defineRule({
       const found = effectMemberOf(context, call.callee);
 
       return found?.module === "Option" && found.member === member ? call : undefined;
-    };
-
-    const isPure = (node: ESTree.Expression): boolean => {
-      if (node.type === "Identifier" || node.type === "ThisExpression") return true;
-      if (node.type === "ChainExpression") {
-        return node.expression.type === "MemberExpression" && isPure(node.expression);
-      }
-
-      return (
-        node.type === "MemberExpression" &&
-        node.object.type !== "Super" &&
-        isPure(node.object) &&
-        (!node.computed || node.property.type === "Literal")
-      );
     };
 
     return {
@@ -131,7 +127,9 @@ export default defineRule({
           some.callee.type === "MemberExpression" ? getText(some.callee.object) : "Option";
 
         const fix =
-          some.callee.type === "MemberExpression" && isPure(test.subject)
+          test.checks === 3 &&
+          some.callee.type === "MemberExpression" &&
+          (test.subject.type === "Identifier" || test.subject.type === "ThisExpression")
             ? (fixer: Fixer) => fixer.replaceText(node, `${option}.fromNullable(${subject})`)
             : undefined;
 

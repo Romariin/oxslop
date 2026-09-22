@@ -13,6 +13,8 @@ tester.run("oxslop/no-service-option", rule, {
     "const Effect = { serviceOption: (tag: unknown) => tag }; Effect.serviceOption(Db);",
     "function read(Effect: { serviceOption: (tag: unknown) => unknown }) { return Effect.serviceOption(Db); }",
     'import { Effect } from "other-lib"; Effect.serviceOption(Db);',
+    'import * as Effect from "effect"; Effect.serviceOption(Db);',
+    'import * as Fx from "effect"; function f(Fx) { Fx.Effect.serviceOption(Db); }',
   ],
   invalid: [
     {
@@ -38,6 +40,11 @@ tester.run("oxslop/no-service-option", rule, {
     {
       name: "bare member import",
       code: 'import { serviceOption } from "effect/Effect"; serviceOption(Db);',
+      errors: [error],
+    },
+    {
+      name: "root namespace import",
+      code: 'import * as Fx from "effect"; Fx.Effect.serviceOption(Db);',
       errors: [error],
     },
     { name: "unresolved global Effect", code: "Effect.serviceOption(Db);", errors: [error] },

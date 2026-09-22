@@ -18,8 +18,14 @@ tester.run("oxslop/no-unknown-returns", rule, {
     "type Result = Promise<string>; function f(): Result { return fetch(); }",
     "function f(value: unknown) { return value; }",
     "interface A { run(): string; }",
+    "type Promise<T> = { value: T }; function f(): Promise<unknown> { return p; }",
   ],
   invalid: [
+    {
+      name: "recursive promise does not hide nearby unknown return",
+      code: "type P = Promise<P>; function recursive(): P { return p; }\nfunction wide(): unknown { return 1; }",
+      errors: [{ ...error("unknown"), line: 2 }],
+    },
     { name: "unknown", code: "function f(): unknown { return 1; }", errors: [error("unknown")] },
     { name: "arrow", code: "const f = (): unknown => 1;", errors: [error("unknown")] },
     {

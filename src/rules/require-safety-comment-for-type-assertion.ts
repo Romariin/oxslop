@@ -28,7 +28,7 @@ const enclosingStatement = (node: ESTree.Node): ESTree.Node => {
 
 /** `// SAFETY: reason`, `/* SAFETY: reason *\/`, or a JSDoc block whose first text is the marker. */
 const justifies = (comment: Comment, markers: readonly string[]): boolean => {
-  const text = comment.value.replace(/^[\s*]+/, "");
+  const text = comment.value.replace(/^\s*\*(?: |$)/gm, "").replace(/^[\s*]+/, "");
 
   return markers.some(
     (marker) => text.startsWith(`${marker}:`) && text.slice(marker.length + 1).trim() !== "",
@@ -66,8 +66,10 @@ export default defineRule({
     const justifiedAbove = (statement: ESTree.Node): boolean => {
       let line = statement.loc.start.line;
 
-      for (const comment of comments.toReversed()) {
-        if (comment.end > statement.start) continue;
+      for (let index = comments.length - 1; index >= 0; index -= 1) {
+        const comment = comments[index];
+
+        if (comment === undefined || comment.end > statement.start) continue;
         if (comment.loc.end.line < line - 1) return false;
         if (justifies(comment, markers)) return true;
         line = comment.loc.start.line;

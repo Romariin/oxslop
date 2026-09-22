@@ -66,10 +66,14 @@ const apiOf = (context: Context, node: ESTree.Node): string | undefined => {
       const { imported: name } = imported.specifier;
       const key = name.type === "Literal" ? name.value : name.name;
 
-      return APIS[key]?.packages.includes(imported.source) ? key : undefined;
+      return Object.hasOwn(APIS, key) && APIS[key]?.packages.includes(imported.source)
+        ? key
+        : undefined;
     }
 
-    return APIS[node.name]?.global && isGlobalName(context, node) ? node.name : undefined;
+    return Object.hasOwn(APIS, node.name) && APIS[node.name]?.global && isGlobalName(context, node)
+      ? node.name
+      : undefined;
   }
 
   if (node.type === "MemberExpression" && node.object.type === "Identifier") {
@@ -77,6 +81,7 @@ const apiOf = (context: Context, node: ESTree.Node): string | undefined => {
     const imported = importOf(context, node.object);
 
     return key !== undefined &&
+      Object.hasOwn(APIS, key) &&
       imported?.specifier.type === "ImportNamespaceSpecifier" &&
       APIS[key]?.packages.includes(imported.source)
       ? key

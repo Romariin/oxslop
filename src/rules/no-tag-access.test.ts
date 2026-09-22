@@ -17,6 +17,7 @@ tester.run("oxslop/no-tag-access", rule, {
     "const { _tagged } = x;",
     'Effect.catchTag("NotFound", () => Effect.void);',
     "if (Predicate.isTagged(x, 'A')) { x.value; }",
+    "delete x._tag;",
   ],
   invalid: [
     { name: "member read", code: "const t = x._tag;", errors: [error] },
@@ -32,5 +33,7 @@ tester.run("oxslop/no-tag-access", rule, {
     { name: "assignment destructure", code: "let t; ({ _tag: t } = x);", errors: [error] },
     { name: "chained read", code: "const t = self.error._tag;", errors: [error] },
     { name: "filter callback", code: 'items.filter((i) => i._tag !== "B");', errors: [error] },
+    { name: "compound assignment reads the tag", code: "x._tag += 'A';", errors: [error] },
+    { name: "nullish assignment reads the tag", code: "x._tag ??= 'A';", errors: [error] },
   ],
 });

@@ -1,6 +1,6 @@
 {
   "name": "oxslop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Configurable Oxlint plugin and Oxfmt preset that reject AI slop: low-evidence TypeScript, non-idiomatic Effect, and low-signal style.",
   "keywords": [
     "effect",

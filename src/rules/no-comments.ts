@@ -18,10 +18,13 @@ const DEFAULTS: Options = { allow: ["SAFETY"], allowJsdoc: true };
 export default defineRule({
   meta: {
     type: "suggestion",
-    docs: { description: "Disallow comments other than `SAFETY:` and tooling directives." },
+    docs: {
+      description:
+        "Disallow comments other than `SAFETY:`, tooling directives and, by default, JSDoc.",
+    },
     messages: {
       comment:
-        "Delete the comment; express it through a name, a type or a test. Only `{{allowed}}` notes and tooling directives stay.",
+        "Delete the comment; express it through a name, a type or a test. Allowed markers: `{{allowed}}`. Tooling directives and configured JSDoc stay.",
     },
     schema: [
       {

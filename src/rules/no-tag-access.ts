@@ -29,7 +29,14 @@ export default defineRule({
         if (staticMemberName(node) !== "_tag" || node.object.type === "ThisExpression") return;
         const { parent } = node;
 
-        if (parent.type === "AssignmentExpression" && parent.left === node) return;
+        if (
+          parent.type === "AssignmentExpression" &&
+          parent.left === node &&
+          parent.operator === "="
+        )
+          return;
+
+        if (parent.type === "UnaryExpression" && parent.operator === "delete") return;
         context.report({ node, messageId: "tagAccess" });
       },
       ObjectPattern(node) {

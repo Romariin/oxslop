@@ -65,6 +65,12 @@ tester.run("oxslop/require-readable-spacing", rule, {
       errors: [error],
     },
     {
+      name: "trailing next-line directive stays adjacent to its target",
+      code: "go(); // oxlint-disable-next-line no-console\nconsole.log(1);",
+      output: "go();\n\n // oxlint-disable-next-line no-console\nconsole.log(1);",
+      errors: [error],
+    },
+    {
       name: "same line",
       code: "go(); stop();",
       output: "go();\n\n stop();",

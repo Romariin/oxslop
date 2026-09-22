@@ -4,7 +4,7 @@ Configurable [Oxlint](https://oxc.rs/docs/guide/usage/linter) plugin and [Oxfmt]
 
 Rules are organised in **groups** you switch on and off per project. A repo that uses Effect enables the `effect` group; one that does not, does not. Everything else stays identical across projects.
 
-Inspired by [dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop), [jliocsar/begone-slop](https://github.com/jliocsar/begone-slop) and [typeonce-dev/ai-automation](https://github.com/typeonce-dev/ai-automation). Unlike anti-slop, this is a published package with a config builder rather than a vendored copy.
+Inspired by [begone-slop](https://github.com/jliocsar/begone-slop), [anti-slop](https://github.com/dmmulroy/anti-slop) and [ai-automation](https://github.com/typeonce-dev/ai-automation). See [Credits](#credits).
 
 ## Install
 
@@ -13,7 +13,7 @@ bun add -d oxslop oxlint oxfmt
 # or: npm i -D oxslop oxlint oxfmt
 ```
 
-`oxlint >= 1.85` is required (JS plugin API). `@oxlint/plugins` is a runtime dependency of `oxslop` and installs automatically.
+`oxlint 1.85.0` is required (JS plugin API). `@oxlint/plugins` is a runtime dependency of `oxslop` and installs automatically.
 
 ## Configure Oxlint
 
@@ -107,6 +107,10 @@ The preset: 100 columns, 2 spaces, semicolons, double quotes, trailing commas, L
 
 Rules use Oxlint's ESTree and scope APIs, not a type checker. They resolve same-file type aliases (including block-scoped and transparent generic aliases) and follow Effect imports (`import { Effect as E }`, `import * as L from "effect/Layer"`), but never infer imported types. Precision is preferred over recall.
 
+These checks are syntactic policies, not proof of type safety. `no-runtime-typeof` does not track whether a value has already been decoded. Calls extracted into local aliases are not followed, and some complex type shapes can escape detection. Keep the TypeScript compiler and runtime boundary validation enabled.
+
+`prefer-option-from-nullable` only autofixes checks covering both `null` and `undefined` on an identifier or `this`. Single-sided checks and property accesses are reported for manual review: rewriting them can change `Some(undefined)` into `None` or remove getter evaluations.
+
 `R` = enabled by its group by default. Other rules need `strict: true`, the `all` preset, or an explicit `rules` entry. `F` = autofix.
 
 <!-- rules:start -->
@@ -124,7 +128,7 @@ Rules use Oxlint's ESTree and scope APIs, not a type checker. They resolve same-
 | `no-unsafe-dictionary-type` | Disallow dictionaries whose values are `unknown`, `any`, `object` or `{}`. | R |
 | `no-reflect-get` | Disallow `Reflect.get`; use typed property access or parse the input. | R |
 | `no-reflect-apply` | Disallow `Reflect.apply`; call the function directly. | R |
-| `no-runtime-typeof` | Disallow `typeof` narrowing on values that were never parsed; `typeof x === "undefined"` probes stay valid. | R |
+| `no-runtime-typeof` | Disallow runtime `typeof` comparisons and switches, except `"undefined"` probes and, by default, type-predicate functions. | R |
 | `no-in-operator` | Disallow the `in` operator as an object-key probe; parse into a discriminated type instead. | R |
 | `no-conditional-empty-object-spread` | Disallow `...(cond ? { a } : {})` and `...(cond && { a })` used to omit fields. | R |
 | `no-widen-then-assert` | Disallow widening a known value to `unknown`/`any`/`object` and asserting it back later. | R |
@@ -142,7 +146,7 @@ Rules use Oxlint's ESTree and scope APIs, not a type checker. They resolve same-
 | `no-service-option` | Disallow `Effect.serviceOption`; require the service or provide a default layer. | R |
 | `no-disable-validation` | Disallow `disableValidation: true`, which decodes without checking. | R |
 | `no-silent-error-swallow` | Disallow catch handlers that discard the error and return `Effect.void`. | R |
-| `no-yieldless-gen` | Disallow `Effect.gen` generators that never `yield*`; use `Effect.succeed` or `Effect.sync`. | R |
+| `no-yieldless-gen` | Disallow `Effect.gen` generators that never yield; use `Effect.succeed` or `Effect.sync`. | R |
 | `prefer-effect-match` | Prefer `Match` over chained literal ternaries on the same subject. | R |
 | `prefer-option-from-nullable` | Prefer `Option.fromNullable` over a nullish ternary producing `Option.some`/`Option.none`. | R F |
 | `pipe-max-arguments` | Limit the number of arguments passed to `pipe` / `.pipe()`. | R |
@@ -153,7 +157,7 @@ Rules use Oxlint's ESTree and scope APIs, not a type checker. They resolve same-
 
 | Rule | Rejects | |
 | --- | --- | --- |
-| `no-comments` | Disallow comments other than `SAFETY:` and tooling directives. |  |
+| `no-comments` | Disallow comments other than `SAFETY:`, tooling directives and, by default, JSDoc. |  |
 | `no-narration-comments` | Disallow comments that narrate the next statement (`// Import x`, `// Return the result`). | R |
 | `no-emoji` | Disallow emoji in source code, strings and comments. | R |
 | `no-vague-identifiers` | Disallow placeholder names such as `data`, `temp`, `result` or `obj` on local bindings. |  |
@@ -200,16 +204,70 @@ oxslop({
 
 ```sh
 bun install
-bun run check   # typecheck, lint, format check, presets check, tests, build
-bun run smoke   # runs the real oxlint binary against the built package
+bun run check   # typecheck, lint, format check, presets check, tests, build, smoke test
 ```
 
 Tests run under Node (`node --test`): Oxlint's `RuleTester` needs Node's raw-transfer parser and is not supported under Bun.
 
-The repo lints itself with its own rules (`.oxlintrc.json` loads `./src/index.ts` as a JS plugin), so every rule runs on real code before it ships.
+The repo lints itself with a selection of its own rules (`.oxlintrc.json` loads `./src/index.ts` as a JS plugin). The rule tests cover all 39 rules; the smoke check exercises the built plugin through real Oxlint configuration.
 
-Adding a rule: add its metadata to `src/catalog.ts`, implement `src/rules/<name>.ts` + `<name>.test.ts`, register it in `src/index.ts`, run `bun run presets` (regenerates presets and this README's tables). `test/catalog.test.ts` fails until catalog, plugin and README agree.
+Adding a rule: add its metadata to `src/catalog.ts`, implement `src/rules/<name>.ts` + `<name>.test.ts`, register it in `src/index.ts`, run `bun run presets` (regenerates presets and this README's tables). `test/catalog.test.ts` checks registration and fixability metadata; `bun run presets:check` checks the generated presets and README tables.
+
+### Release
+
+Publishing uses [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (GitHub Actions OIDC), not an npm token. The workflow runs on a GitHub-hosted runner with Node 24, installs npm 11 (OIDC requires npm 11.5.1 or newer), and requests `id-token: write`.
+
+#### One-time npm setup
+
+The package must exist on npm before its trusted publisher can be configured. If `npm view oxslop version` returns `E404`, a maintainer must make the first publication interactively:
+
+```sh
+bun install --frozen-lockfile
+bun run check
+npm pack --dry-run
+npm login
+npm publish --access public
+```
+
+The last command publishes the version in `package.json`; run it only when that version is ready for release. Do not push a release tag for an already-published version: npm rejects publishing the same version twice. After a manual `0.1.0` bootstrap, the first automated release must use a new version, such as `0.1.1`.
+
+Open [the npm package settings](https://www.npmjs.com/package/oxslop/access), then **Trusted Publisher → GitHub Actions**, and configure these case-sensitive values:
+
+| Field | Value |
+| --- | --- |
+| Organization or user | `Romariin` |
+| Repository | `oxslop` |
+| Workflow filename | `release.yml` (not `.github/workflows/release.yml`) |
+| Environment name | Leave empty; the workflow does not use a GitHub environment |
+| Allowed actions | Enable direct publishing with `npm publish`, not only `npm stage publish` |
+
+Save the trusted publisher. The repository must contain `.github/workflows/release.yml`, and `package.json` must keep its matching `repository.url`. No `NPM_TOKEN` secret is required.
+
+After a successful OIDC publication, select **Settings → Publishing access → Require two-factor authentication and disallow tokens** on npm. Revoke obsolete automation tokens and remove the old GitHub `NPM_TOKEN` secret if one was previously configured.
+
+#### Subsequent releases
+
+1. Set `package.json` to a new, unpublished version.
+2. Run `bun install --frozen-lockfile` and `bun run check`.
+3. Inspect the package contents with `npm pack --dry-run`; `LICENSE`, `README.md`, `dist/` and all six JSON presets must be included.
+4. Resolve any third-party licensing questions noted below before publishing.
+5. Push the release changes to a branch and open a pull request targeting `main`. Wait for CI and CodeQL. Contributor reviews require one approval; only `Romariin` can bypass that approval requirement when merging a PR. Signed commits, CodeQL and the PR requirement have no bypass. Use GitHub's squash merge to produce a verified signed commit; direct pushes to `main` are not allowed.
+6. Tag the merged commit on `main` with a tag matching the package version, then push that tag. The release workflow checks the tag, reruns validation, publishes to npm through OIDC with provenance, then creates the GitHub release.
+
+Pushing a `v*` tag starts publication; do not push one merely to test the workflow.
+
+## Credits
+
+oxslop builds on ideas and patterns from:
+
+- [jliocsar/begone-slop](https://github.com/jliocsar/begone-slop) — anti-slop lint rules and evidence-first TypeScript checks. [MIT license](https://github.com/jliocsar/begone-slop/blob/main/LICENSE), copyright (c) 2026 jliocsar.
+- [dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop) — the original anti-slop rules and Effect conventions. [MIT license](https://github.com/dmmulroy/anti-slop/blob/main/LICENSE), copyright (c) 2026 Dillon Mulroy.
+- [typeonce-dev/ai-automation](https://github.com/typeonce-dev/ai-automation) — automation-first verification, rule organization, and configuration patterns. No explicit license was found in its repository or package metadata when checked on 2026-09-22; this credit does not grant permission to redistribute its code.
+
+Thank you to the authors and contributors of these projects. These credits do not imply endorsement.
 
 ## License
 
-MIT
+[MIT](LICENSE), copyright (c) 2026 Romarin. Upstream MIT notices are preserved in [LICENSE](LICENSE).
+
+The MIT license covers oxslop and the upstream MIT notices listed in `LICENSE`; it does not relicense `ai-automation`. Any code copied or adapted from that project needs permission from its authors before redistribution.

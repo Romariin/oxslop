@@ -32,7 +32,7 @@ export default defineRule({
     type: "problem",
     docs: {
       description:
-        'Disallow `typeof` narrowing on values that were never parsed; `typeof x === "undefined"` probes stay valid.',
+        'Disallow runtime `typeof` comparisons and switches, except `"undefined"` probes and, by default, type-predicate functions.',
     },
     messages: {
       runtimeTypeof:
