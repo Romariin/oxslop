@@ -26,12 +26,13 @@ const KNOWN_VALUE_TYPES: readonly string[] = [
   "ClassExpression",
 ];
 
-/** `x as const`. */
-export const isConstAssertion = (node: ESTree.Expression): node is ESTree.TSAsExpression =>
-  node.type === "TSAsExpression" &&
+/** `x as const` / `<const>x`. */
+export const isConstAssertion = (node: ESTree.Expression): boolean =>
+  (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") &&
   node.typeAnnotation.type === "TSTypeReference" &&
   node.typeAnnotation.typeName.type === "Identifier" &&
-  node.typeAnnotation.typeName.name === "const";
+  node.typeAnnotation.typeName.name === "const" &&
+  node.typeAnnotation.typeArguments === null;
 
 /** Strip parentheses, `as const` and `satisfies` wrappers; none of them change the value. */
 export const unwrapExpression = (node: ESTree.Expression): ESTree.Expression => {
@@ -40,7 +41,10 @@ export const unwrapExpression = (node: ESTree.Expression): ESTree.Expression => 
   for (;;) {
     if (current.type === "ParenthesizedExpression" || current.type === "TSSatisfiesExpression") {
       current = current.expression;
-    } else if (isConstAssertion(current)) {
+    } else if (
+      (current.type === "TSAsExpression" || current.type === "TSTypeAssertion") &&
+      isConstAssertion(current)
+    ) {
       current = current.expression;
     } else {
       return current;

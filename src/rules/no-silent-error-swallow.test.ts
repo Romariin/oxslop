@@ -20,6 +20,7 @@ tester.run("oxslop/no-silent-error-swallow", rule, {
     `${effect}program.pipe(Effect.catchAll((_) => Effect.void.pipe(Effect.tap(() => log(_)))));`,
     "const Effect = { catchAll: (f: unknown) => f, void: 0 }; program.pipe(Effect.catchAll(() => Effect.void));",
     'import { Effect } from "effect"; const Effect2 = { void: 0 }; program.pipe(Effect.catchAll(() => Effect2.void));',
+    `${effect}program.pipe(Effect.catchAll(() => Effect.succeed(void console.error('logged'))));`,
   ],
   invalid: [
     {

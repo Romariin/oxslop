@@ -21,6 +21,8 @@ tester.run("oxslop/no-comments", rule, {
     '/// <reference types="node" />\nconst n = 1;',
     "#!/usr/bin/env node\nconst s = 1;",
     "/*! MIT License */\nconst l = 1;",
+    "const x = /*#__PURE__*/ build();",
+    "const x = /* @__PURE__ */ build();",
     { code: "// TODO: later\nconst x = 1;", options: [{ allow: ["TODO"] }] },
     { code: "// SAFETY: still fine\nconst x = 1;", options: [{ allow: ["SAFETY", "TODO"] }] },
   ],

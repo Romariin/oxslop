@@ -81,7 +81,7 @@ export const CATALOG = defineCatalog({
     group: "core",
     recommended: true,
     description:
-      'Disallow `typeof` narrowing on values that were never parsed; `typeof x === "undefined"` probes stay valid.',
+      'Disallow runtime `typeof` comparisons and switches, except `"undefined"` probes and, by default, type-predicate functions.',
   },
   "no-in-operator": {
     group: "core",
@@ -155,7 +155,7 @@ export const CATALOG = defineCatalog({
     group: "effect",
     recommended: true,
     description:
-      "Disallow `Effect.gen` generators that never `yield*`; use `Effect.succeed` or `Effect.sync`.",
+      "Disallow `Effect.gen` generators that never yield; use `Effect.succeed` or `Effect.sync`.",
   },
   "prefer-effect-match": {
     group: "effect",
@@ -189,7 +189,8 @@ export const CATALOG = defineCatalog({
   "no-comments": {
     group: "style",
     recommended: false,
-    description: "Disallow comments other than `SAFETY:` and tooling directives.",
+    description:
+      "Disallow comments other than `SAFETY:`, tooling directives and, by default, JSDoc.",
   },
   "no-narration-comments": {
     group: "style",

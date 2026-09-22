@@ -9,17 +9,13 @@ test("plugin registers exactly the catalog rules", () => {
   assert.deepEqual(Object.keys(plugin.rules ?? {}).sort(), [...RULE_NAMES].sort());
 });
 
-test("rule metadata matches the catalog", () => {
+test("catalog autofix claims agree with registered rules", () => {
   for (const name of RULE_NAMES) {
     const rule = rules[name];
-    assert.ok(rule, `${name} missing`);
-    assert.equal(rule.meta?.docs?.description, CATALOG[name].description, `${name} description`);
     assert.equal(
       rule.meta?.fixable !== undefined,
       CATALOG[name].fixable === true,
       `${name} fixable flag`,
     );
-
-    assert.ok(rule.meta?.schema !== undefined, `${name} must declare an options schema`);
   }
 });

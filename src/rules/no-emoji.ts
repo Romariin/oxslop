@@ -5,7 +5,7 @@ import { defineRule } from "../shared/rule.ts";
  * appear in plain text (`©`, `®`, `™`, `↩`, digits, `#`, `*`) unless followed by U+FE0F.
  */
 const EMOJI =
-  /(?:\p{Extended_Pictographic}(?!\uFE0E)|\p{Regional_Indicator}{2}|[#*0-9]\uFE0F\u20E3)(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu;
+  /(?:\p{Extended_Pictographic}(?!\uFE0E)|\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3)(?:\uFE0F|\u200D\p{Extended_Pictographic}|\p{Emoji_Modifier})*/gu;
 
 const TEXT_SYMBOLS = new Set([
   "©",

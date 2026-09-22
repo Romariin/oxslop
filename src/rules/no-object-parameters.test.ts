@@ -55,6 +55,11 @@ tester.run("oxslop/no-object-parameters", rule, {
     { name: "rest array", code: "function f(...args: object[]) {}", errors: [error] },
     { name: "rest tuple", code: "function f(...args: [object, string]) {}", errors: [error] },
     {
+      name: "named variadic tuple element",
+      code: "function f(...args: [head: string, ...tail: object[]]) {}",
+      errors: [error],
+    },
+    {
       name: "predicate subject exemption is per name",
       code: "function isFoo(value: object, other: object): value is Foo { return true; }",
       errors: [error],

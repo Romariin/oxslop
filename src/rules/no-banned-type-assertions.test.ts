@@ -15,10 +15,16 @@ tester.run("oxslop/no-banned-type-assertions", rule, {
     "type Wrap<T> = T; const value = input as Wrap<string>;",
     "const value = input as Array<unknown>;",
     "const value = input as { key: unknown };",
+    "type U = U | string; const x = input as U;",
     { code: "const value = input as unknown;", options: [{ banned: ["any"] }] },
     { code: "const value = input as never;", options: [{ banned: ["any", "unknown"] }] },
   ],
   invalid: [
+    {
+      name: "recursive union still checks its banned branch",
+      code: "type U = U | unknown; const x = input as U;",
+      errors: [error("unknown")],
+    },
     { name: "as any", code: "const value = input as any;", errors: [error("any")] },
     { name: "as never", code: "const value = input as never;", errors: [error("never")] },
     { name: "as unknown", code: "const value = input as unknown;", errors: [error("unknown")] },
@@ -52,6 +58,16 @@ tester.run("oxslop/no-banned-type-assertions", rule, {
       name: "transparent generic alias",
       code: "type Wrap<T> = T; const value = input as Wrap<never>;",
       errors: [error("never")],
+    },
+    {
+      name: "omitted generic argument resolves through its declared type",
+      code: "type Wrap<T = unknown> = T; const x = input as Wrap;",
+      errors: [error("unknown")],
+    },
+    {
+      name: "parenthesised transparent generic alias",
+      code: "type Wrap<T> = (T); const x = input as Wrap<unknown>;",
+      errors: [error("unknown")],
     },
     {
       name: "chained through unknown reports the inner link",

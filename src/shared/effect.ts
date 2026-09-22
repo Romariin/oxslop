@@ -25,6 +25,7 @@ const isEffectSource = (source: string): boolean => {
 };
 
 const submodule = (source: string): string | undefined => {
+  if (EFFECT_PACKAGES.has(source)) return undefined;
   const parts = source.split("/");
 
   return parts.length >= 2 ? parts[parts.length - 1] : undefined;
@@ -54,6 +55,12 @@ const bindingOf = (
       if (def.type !== "ImportBinding" || declaration?.type !== "ImportDeclaration")
         return { kind: "local" };
 
+      if (
+        declaration.importKind === "type" ||
+        (def.node.type === "ImportSpecifier" && def.node.importKind === "type")
+      )
+        return { kind: "local" };
+
       return {
         kind: "import",
         source: declaration.source.value,
@@ -72,6 +79,17 @@ const bindingOf = (
  * Returns `undefined` when the identifier is bound to something other than an Effect module.
  */
 export const effectModuleOf = (context: Context, node: ESTree.Node): string | undefined => {
+  if (node.type === "ParenthesizedExpression") return effectModuleOf(context, node.expression);
+  if (node.type === "MemberExpression" && node.object.type === "Identifier") {
+    const binding = bindingOf(context, node.object);
+
+    return binding.kind === "import" &&
+      EFFECT_PACKAGES.has(binding.source) &&
+      binding.specifier.type === "ImportNamespaceSpecifier"
+      ? staticMemberName(node)
+      : undefined;
+  }
+
   if (node.type !== "Identifier") return undefined;
   const binding = bindingOf(context, node);
 
@@ -80,8 +98,8 @@ export const effectModuleOf = (context: Context, node: ESTree.Node): string | un
   if (!isEffectSource(binding.source)) return undefined;
   const { specifier } = binding;
 
-  if (specifier.type === "ImportNamespaceSpecifier") return submodule(binding.source) ?? node.name;
-  if (specifier.type === "ImportSpecifier") {
+  if (specifier.type === "ImportNamespaceSpecifier") return submodule(binding.source);
+  if (specifier.type === "ImportSpecifier" && submodule(binding.source) === undefined) {
     return specifier.imported.type === "Identifier"
       ? specifier.imported.name
       : specifier.imported.value;
@@ -100,8 +118,21 @@ export interface EffectMember {
  * Also recognises bare member imports: `import { provide } from "effect/Layer"`.
  */
 export const effectMemberOf = (context: Context, node: ESTree.Node): EffectMember | undefined => {
+  if (node.type === "ParenthesizedExpression") return effectMemberOf(context, node.expression);
   if (node.type === "MemberExpression") {
     const member = staticMemberName(node);
+
+    if (member === "pipe" && node.object.type === "Identifier") {
+      const binding = bindingOf(context, node.object);
+
+      if (
+        binding.kind === "import" &&
+        binding.source === "effect" &&
+        binding.specifier.type === "ImportNamespaceSpecifier"
+      )
+        return { module: "Function", member };
+    }
+
     const module = effectModuleOf(context, node.object);
 
     return member !== undefined && module !== undefined ? { module, member } : undefined;

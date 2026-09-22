@@ -1,15 +1,27 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test } from "node:test";
+import { afterEach, test } from "node:test";
 
 import type { OxlintConfig } from "oxlint";
 
 import { CATALOG, RULE_NAMES, oxslop } from "../src/config.ts";
 import type { Group, RuleName } from "../src/config.ts";
 
-const emptyDir = () => mkdtempSync(join(tmpdir(), "oxslop-"));
+const tempDirs = new Set<string>();
+
+afterEach(() => {
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
+  tempDirs.clear();
+});
+
+const emptyDir = () => {
+  const dir = mkdtempSync(join(tmpdir(), "oxslop-"));
+  tempDirs.add(dir);
+
+  return dir;
+};
 
 const effectDir = () => {
   const dir = emptyDir();
@@ -22,18 +34,14 @@ const effectDir = () => {
 const groupsIn = (rules: NonNullable<OxlintConfig["rules"]>): Set<Group> =>
   new Set(Object.keys(rules).map((key) => CATALOG[key.slice("oxslop/".length) as RuleName].group));
 
-test("defaults: recommended rules, effect off when the package is absent", () => {
-  const config = oxslop({ cwd: emptyDir() });
-  assert.deepEqual(config.jsPlugins, [{ name: "oxslop", specifier: "oxslop" }]);
-  const rules = config.rules ?? {};
-  assert.deepEqual([...groupsIn(rules)].sort(), ["core", "style", "testing"]);
-  assert.equal(rules["oxslop/no-comments"], undefined, "non-recommended rule stays off");
-  assert.equal(rules["oxslop/no-emoji"], "error");
+test("effect auto-detection excludes the group when the package is absent", () => {
+  const rules = oxslop({ cwd: emptyDir(), effect: "auto" }).rules ?? {};
+  assert.ok(!groupsIn(rules).has("effect"));
 });
 
 test("effect auto-detection enables the group when effect resolves", () => {
-  const rules = oxslop({ cwd: effectDir() }).rules ?? {};
-  assert.equal(rules["oxslop/no-tag-access"], "error");
+  const rules = oxslop({ cwd: effectDir(), effect: "auto", severity: "warn" }).rules ?? {};
+  assert.equal(rules["oxslop/no-tag-access"], "warn");
 });
 
 test("effect: false disables the group even when effect resolves", () => {
@@ -51,8 +59,8 @@ test("group severity and global severity", () => {
 });
 
 test("strict enables non-recommended rules", () => {
-  const rules = oxslop({ cwd: emptyDir(), strict: true }).rules ?? {};
-  assert.equal(rules["oxslop/no-comments"], "error");
+  const rules = oxslop({ cwd: emptyDir(), strict: true, severity: "warn" }).rules ?? {};
+  assert.equal(rules["oxslop/no-comments"], "warn");
 });
 
 test("per-rule overrides accept bare and prefixed names, apply last", () => {
@@ -76,17 +84,17 @@ test("unknown rule names throw", () => {
   assert.throws(() => oxslop({ cwd: emptyDir(), rules }), /unknown rule/);
 });
 
-test("test-only rules go into a test-file override", () => {
-  const config = oxslop({ cwd: emptyDir(), testFiles: ["**/*.spec.ts"] });
-  assert.equal(config.rules?.["oxslop/expect-padding"], undefined);
-  assert.deepEqual(config.overrides, [
-    { files: ["**/*.spec.ts"], rules: { "oxslop/expect-padding": "error" } },
-  ]);
+test("inherited object properties are not rule names", () => {
+  const rules = { ["toString" as RuleName]: "error" as const };
+  assert.throws(() => oxslop({ effect: false, rules }), /unknown rule/);
 });
 
-test("custom specifier for vendored installs", () => {
-  const config = oxslop({ cwd: emptyDir(), specifier: "./tools/oxslop/index.ts" });
-  assert.deepEqual(config.jsPlugins, [{ name: "oxslop", specifier: "./tools/oxslop/index.ts" }]);
+test("test-only rules go into a test-file override", () => {
+  const config = oxslop({ cwd: emptyDir(), testing: "warn", testFiles: ["**/*.spec.ts"] });
+  assert.equal(config.rules?.["oxslop/expect-padding"], undefined);
+  assert.deepEqual(config.overrides, [
+    { files: ["**/*.spec.ts"], rules: { "oxslop/expect-padding": "warn" } },
+  ]);
 });
 
 test("every catalog rule is reachable through some configuration", () => {

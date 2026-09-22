@@ -24,6 +24,31 @@ tester.run("oxslop/no-unknown-parameters", rule, {
     { code: "function f(input: unknown) {}", options: [{ allowNames: ["input"] }] },
   ],
   invalid: [
+    {
+      name: "recursive union still checks its unknown branch",
+      code: "type U = U | unknown; function f(value: U) {}",
+      errors: [error],
+    },
+    {
+      name: "recursive narrow union does not hide nearby unknown parameter",
+      code: "type U = U | string; function narrow(value: U) {}\nfunction wide(value: unknown) {}",
+      errors: [{ ...error, line: 2 }],
+    },
+    {
+      name: "readonly rest tuple",
+      code: "function f(...args: readonly [unknown]) {}",
+      errors: [error],
+    },
+    {
+      name: "variadic rest tuple",
+      code: "function f(...args: [...unknown[]]) {}",
+      errors: [error],
+    },
+    {
+      name: "union of rest tuples",
+      code: "function f(...args: [string] | [unknown]) {}",
+      errors: [error],
+    },
     { name: "function declaration", code: "function f(value: unknown) {}", errors: [error] },
     { name: "arrow function", code: "const f = (value: unknown) => value;", errors: [error] },
     { name: "method", code: "class A { run(value: unknown) {} }", errors: [error] },

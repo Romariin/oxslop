@@ -22,7 +22,7 @@ export default defineRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `Effect.gen` generators that never `yield*`; use `Effect.succeed` or `Effect.sync`.",
+        "Disallow `Effect.gen` generators that never yield; use `Effect.succeed` or `Effect.sync`.",
     },
     messages: {
       yieldlessGen:

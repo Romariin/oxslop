@@ -41,6 +41,21 @@ tester.run("oxslop/no-array-filter-map", rule, {
       errors: [error],
     },
     {
+      name: "repeated trailing method does not hide mixed passes",
+      code: "[1, 2].filter(Boolean).map(String).map(Number);",
+      errors: [error],
+    },
+    {
+      name: "long mixed chain reports once",
+      code: "items.filter(f).map(g).map(h).filter(i);",
+      errors: [error],
+    },
+    {
+      name: "Object values produce an array rather than an iterator",
+      code: "Object.values(items).filter(Boolean).map(String);",
+      errors: [error],
+    },
+    {
       name: "iterator materialised before the passes",
       code: "items.values().toArray().filter(f).map(g);",
       errors: [error],

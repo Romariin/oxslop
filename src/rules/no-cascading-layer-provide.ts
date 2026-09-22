@@ -24,10 +24,16 @@ export default defineRule({
       CallExpression(node) {
         if (!isPipeCall(context, node)) return;
         let provides = 0;
+        const firstStage =
+          node.callee.type === "Identifier" ||
+          effectMemberOf(context, node.callee)?.module === "Function"
+            ? 1
+            : 0;
 
-        for (const stage of node.arguments) {
-          let call = stage;
+        for (let index = firstStage; index < node.arguments.length; index += 1) {
+          let call = node.arguments[index];
 
+          if (call === undefined) continue;
           while (call.type === "ParenthesizedExpression") call = call.expression;
           if (call.type !== "CallExpression") continue;
           const found = effectMemberOf(context, call.callee);

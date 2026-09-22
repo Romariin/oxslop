@@ -29,7 +29,7 @@ export const hasBlankLineBetween = (
 
 /**
  * Fix inserting a blank line after the last token or trailing comment on `previous`'s final line,
- * so leading comments stay attached to `node`.
+ * so leading comments and next-line directives stay attached to `node`.
  */
 export const insertBlankLineBetween = (
   sourceCode: SourceCode,
@@ -41,7 +41,11 @@ export const insertBlankLineBetween = (
   let next: Span = node;
 
   for (const comment of commentsBetween(sourceCode, previous, node)) {
-    if (comment.loc.start.line !== anchor.loc.end.line) {
+    const nextLineDirective =
+      (comment.type === "Line" || comment.type === "Block") &&
+      /^(?:oxlint|eslint)-disable-next-line(?:\s|$)/.test(comment.value.trimStart());
+
+    if (comment.loc.start.line !== anchor.loc.end.line || nextLineDirective) {
       next = comment;
 
       break;

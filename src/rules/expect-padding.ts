@@ -5,7 +5,7 @@ import { defineRule } from "../shared/rule.ts";
 
 /**
  * A maximal run of consecutive `expect(...)`-rooted statements (`expect(x).toBe(y)`,
- * `await expect(p).resolves.toBe(y)`, `expect.soft(x)...`) inside a block must be separated from
+ * `await expect(p).resolves.toBe(y)`, `expect.soft(x)...`, `expect.poll(fn)...`) inside a block must be separated from
  * the surrounding statements by a blank line on both sides. Runs at the start or end of a block
  * need no padding there. `expect` is matched by name; a differently named assertion helper is
  * not recognised.
@@ -15,6 +15,7 @@ import { defineRule } from "../shared/rule.ts";
 const isExpectStatement = (statement: ESTree.Statement): boolean => {
   if (statement.type !== "ExpressionStatement") return false;
   let current: ESTree.Node = statement.expression;
+  let hasCall = false;
 
   for (;;) {
     switch (current.type) {
@@ -25,13 +26,27 @@ const isExpectStatement = (statement: ESTree.Statement): boolean => {
         current = current.expression;
         continue;
       case "CallExpression":
+        hasCall = true;
         current = current.callee;
         continue;
-      case "MemberExpression":
+      case "MemberExpression": {
+        if (current.object.type === "Identifier" && current.object.name === "expect") {
+          const method =
+            !current.computed && current.property.type === "Identifier"
+              ? current.property.name
+              : current.computed && current.property.type === "Literal"
+                ? current.property.value
+                : undefined;
+
+          if (method !== "soft" && method !== "poll") return false;
+        }
+
         current = current.object;
+
         continue;
+      }
       case "Identifier":
-        return current.name === "expect" && current !== statement.expression;
+        return current.name === "expect" && hasCall;
       default:
         return false;
     }

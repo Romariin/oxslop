@@ -1,6 +1,6 @@
-import type { ESTree } from "@oxlint/plugins";
+import type { Context, ESTree } from "@oxlint/plugins";
 
-import { staticMemberName } from "../shared/globals.ts";
+import { isGlobalName, staticMemberName } from "../shared/globals.ts";
 import { defineRule } from "../shared/rule.ts";
 
 /**
@@ -25,7 +25,7 @@ const methodName = (node: ESTree.Node): string | undefined =>
     : undefined;
 
 /** `true` when the receiver chain produces an iterator rather than an array. */
-const producesIterator = (receiver: ESTree.Node): boolean => {
+const producesIterator = (context: Context, receiver: ESTree.Node): boolean => {
   let current: ESTree.Node = receiver;
 
   for (;;) {
@@ -40,7 +40,15 @@ const producesIterator = (receiver: ESTree.Node): boolean => {
         const method = methodName(current);
 
         if (method === "toArray") return false;
-        if (isIn(ITERATOR_METHODS, method)) return true;
+        if (isIn(ITERATOR_METHODS, method)) {
+          return !(
+            current.callee.type === "MemberExpression" &&
+            current.callee.object.type === "Identifier" &&
+            current.callee.object.name === "Object" &&
+            isGlobalName(context, current.callee.object)
+          );
+        }
+
         if (
           current.callee.type === "MemberExpression" &&
           current.callee.object.type === "Identifier" &&
@@ -92,12 +100,6 @@ export default defineRule({
         const outer = methodName(node);
 
         if (!isIn(PASSES, outer) || node.callee.type !== "MemberExpression") return;
-        const inner = node.callee.object;
-        const innerName = methodName(inner);
-
-        if (!isIn(PASSES, innerName) || innerName === outer || inner.type !== "CallExpression")
-          return;
-
         const { parent } = node;
 
         if (
@@ -110,8 +112,18 @@ export default defineRule({
           return;
         }
 
-        if (inner.callee.type === "MemberExpression" && producesIterator(inner.callee.object))
-          return;
+        let receiver: ESTree.Node = node.callee.object;
+        let mixedPasses = false;
+
+        while (receiver.type === "CallExpression" && receiver.callee.type === "MemberExpression") {
+          const inner = methodName(receiver);
+
+          if (!isIn(PASSES, inner)) break;
+          if (inner !== outer) mixedPasses = true;
+          receiver = receiver.callee.object;
+        }
+
+        if (!mixedPasses || producesIterator(context, receiver)) return;
 
         context.report({ node: node.callee.property, messageId: "filterMap" });
       },

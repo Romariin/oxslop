@@ -17,6 +17,8 @@ tester.run("oxslop/no-module-mocking", rule, {
     "import { it as vi } from 'vitest'; vi.mock('./dep');",
     "mock.module('./dep', () => ({}));",
     "import * as t from 'vitest'; t.expect(1).toBe(1);",
+    "import { constructor as x } from './x'; x.call(null);",
+    "import * as t from 'vitest'; t.constructor.call(null);",
   ],
   invalid: [
     {

@@ -115,7 +115,7 @@ export const oxslop = (options: OxslopOptions = {}): OxlintConfig => {
       key.startsWith(`${PLUGIN_NAME}/`) ? key.slice(PLUGIN_NAME.length + 1) : key
     ) as RuleName;
 
-    if (!(name in CATALOG)) throw new Error(`oxslop: unknown rule "${key}"`);
+    if (!Object.hasOwn(CATALOG, name)) throw new Error(`oxslop: unknown rule "${key}"`);
     const target = CATALOG[name].testOnly ? testRules : rules;
 
     if (setting === "off") delete target[prefixed(name)];

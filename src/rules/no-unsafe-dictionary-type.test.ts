@@ -20,6 +20,7 @@ tester.run("oxslop/no-unsafe-dictionary-type", rule, {
     "type List = unknown[];",
     "type Custom<K, V> = Record<K, V>;",
     "interface Repo { [id: string]: User }",
+    "type Record<K, V> = { key: K; value: V }; type D = Record<string, unknown>;",
   ],
   invalid: [
     { name: "Record unknown", code: "type Dict = Record<string, unknown>;", errors: [error] },

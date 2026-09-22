@@ -20,11 +20,20 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      - name: Install npm with OIDC support
+        run: npm install --global npm@11
+      - name: Verify release tag
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const { version } = JSON.parse(readFileSync("package.json", "utf8"));
+            if (process.env.GITHUB_REF_NAME !== `v${version}`) {
+              throw new Error(`Release tag must match package.json: v${version}`);
+            }
+          '
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true

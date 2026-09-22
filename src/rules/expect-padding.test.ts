@@ -12,6 +12,9 @@ tester.run("oxslop/expect-padding", rule, {
     "test('a', () => {\n  expect(value).toBe(1);\n\n\n  cleanup();\n});",
     "test('a', () => {\n  const expected = expect.objectContaining({ a: 1 });\n  check(expected);\n});",
     "test('a', () => {\n  act();\n  expect;\n});",
+    "test('a', () => {\n  setup();\n  expect.extend(matchers);\n  cleanup();\n});",
+    "test('a', () => {\n  setup();\n  expect.extend;\n  cleanup();\n});",
+    "test('a', async () => {\n  setup();\n  await expect;\n  cleanup();\n});",
     "function f() {\n  setup();\n  run();\n}",
   ],
   invalid: [
@@ -40,6 +43,13 @@ tester.run("oxslop/expect-padding", rule, {
       code: "test('a', async () => {\n  const p = load();\n  await expect(p).resolves.toBe(1);\n  expect.soft(2).toBe(2);\n});",
       output:
         "test('a', async () => {\n  const p = load();\n\n  await expect(p).resolves.toBe(1);\n  expect.soft(2).toBe(2);\n});",
+      errors: [{ messageId: "beforeRun" }],
+    },
+    {
+      name: "polled assertion requires padding",
+      code: "test('a', async () => {\n  setup();\n  await expect.poll(() => read()).toBe(1);\n});",
+      output:
+        "test('a', async () => {\n  setup();\n\n  await expect.poll(() => read()).toBe(1);\n});",
       errors: [{ messageId: "beforeRun" }],
     },
     {

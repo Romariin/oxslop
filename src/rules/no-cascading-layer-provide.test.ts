@@ -14,6 +14,8 @@ tester.run("oxslop/no-cascading-layer-provide", rule, {
     'import { Effect, Layer } from "effect"; program.pipe(Effect.provide(Db), Effect.provide(Config));',
     "const Layer = { provide: (a: unknown) => a }; App.pipe(Layer.provide(Db), Layer.provide(Config));",
     `${effect}const Live = Layer.mergeAll(App.pipe(Layer.provide(Db)), Other.pipe(Layer.provide(Config)));`,
+    'import { Layer, pipe } from "effect"; pipe(Layer.provide(App, Db), Layer.provide(Config));',
+    'import * as Fx from "effect"; Fx.pipe(Fx.Layer.provide(App, Db), Fx.Layer.provide(Config));',
   ],
   invalid: [
     {
@@ -54,6 +56,11 @@ tester.run("oxslop/no-cascading-layer-provide", rule, {
     {
       name: "bare member import",
       code: 'import { provide } from "effect/Layer"; App.pipe(provide(Db), provide(Config));',
+      errors: [error],
+    },
+    {
+      name: "root namespace pipe counts only transformation stages",
+      code: 'import * as Fx from "effect"; Fx.pipe(Fx.Layer.provide(App, Db), Fx.Layer.provide(Config), Fx.Layer.provide(Logger));',
       errors: [error],
     },
   ],

@@ -57,7 +57,9 @@ const isEmptySuccess = (context: Context, node: ESTree.Node): boolean => {
     (value.type === "Identifier" &&
       value.name === "undefined" &&
       context.sourceCode.isGlobalReference(value)) ||
-    (value.type === "UnaryExpression" && value.operator === "void")
+    (value.type === "UnaryExpression" &&
+      value.operator === "void" &&
+      unwrap(value.argument).type === "Literal")
   );
 };
 

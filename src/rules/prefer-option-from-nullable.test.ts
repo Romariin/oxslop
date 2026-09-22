@@ -48,13 +48,13 @@ tester.run("oxslop/prefer-option-from-nullable", rule, {
     {
       name: "strict null",
       code: `${IMPORT} const o = x === null ? Option.none() : Option.some(x);`,
-      output: `${IMPORT} const o = Option.fromNullable(x);`,
+      output: null,
       errors: [error],
     },
     {
       name: "strict undefined with member subject",
       code: `${IMPORT} const o = a.b.c === undefined ? Option.none() : Option.some(a.b.c);`,
-      output: `${IMPORT} const o = Option.fromNullable(a.b.c);`,
+      output: null,
       errors: [error],
     },
     {
@@ -102,7 +102,7 @@ tester.run("oxslop/prefer-option-from-nullable", rule, {
     {
       name: "optional chain subject",
       code: `${IMPORT} const o = a?.b == null ? Option.none() : Option.some(a?.b);`,
-      output: `${IMPORT} const o = Option.fromNullable(a?.b);`,
+      output: null,
       errors: [error],
     },
     {
@@ -113,6 +113,36 @@ tester.run("oxslop/prefer-option-from-nullable", rule, {
     {
       name: "computed member subject reports without fix",
       code: `${IMPORT} const o = a[k] == null ? Option.none() : Option.some(a[k]);`,
+      errors: [error],
+    },
+    {
+      name: "member getter must retain repeated reads",
+      code: `${IMPORT} let reads = 0; const a = { get b() { return ++reads; } }; const o = a.b == null ? Option.none() : Option.some(a.b);`,
+      output: null,
+      errors: [error],
+    },
+    {
+      name: "duplicated strict null check does not cover undefined",
+      code: `${IMPORT} const o = x === null || x === null ? Option.none() : Option.some(x);`,
+      output: null,
+      errors: [error],
+    },
+    {
+      name: "duplicated strict undefined inequality does not cover null",
+      code: `${IMPORT} const o = x !== undefined && x !== undefined ? Option.some(x) : Option.none();`,
+      output: null,
+      errors: [error],
+    },
+    {
+      name: "this is safe to evaluate once",
+      code: `${IMPORT} function f() { return this == null ? Option.none() : Option.some(this); }`,
+      output: `${IMPORT} function f() { return Option.fromNullable(this); }`,
+      errors: [error],
+    },
+    {
+      name: "root namespace import preserves qualified Option",
+      code: 'import * as Fx from "effect"; const o = x == null ? Fx.Option.none() : Fx.Option.some(x);',
+      output: 'import * as Fx from "effect"; const o = Fx.Option.fromNullable(x);',
       errors: [error],
     },
     {

@@ -55,6 +55,7 @@ export default defineRule({
             case "ExportNamedDeclaration":
               if (statement.declaration !== null) return;
               if (statement.source !== null) {
+                if (statement.specifiers.length === 0) return;
                 reexports++;
 
                 break;
