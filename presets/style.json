@@ -1,0 +1,20 @@
+{
+  "$schema": "../../oxlint/configuration_schema.json",
+  "jsPlugins": [
+    {
+      "name": "oxslop",
+      "specifier": "../dist/index.mjs"
+    }
+  ],
+  "rules": {
+    "oxslop/no-comments": "error",
+    "oxslop/no-narration-comments": "error",
+    "oxslop/no-emoji": "error",
+    "oxslop/no-vague-identifiers": "error",
+    "oxslop/no-reexport-only-modules": "error",
+    "oxslop/no-optional-function-parameters": "error",
+    "oxslop/no-array-filter-map": "error",
+    "oxslop/no-reduce-accumulator-copy": "error",
+    "oxslop/require-readable-spacing": "error"
+  }
+}

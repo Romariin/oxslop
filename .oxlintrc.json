@@ -1,0 +1,65 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    "eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "eslint/eqeqeq": "error",
+    "eslint/no-console": "off",
+    "eslint/prefer-const": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "import/no-cycle": "error",
+    "unicorn/no-array-for-each": "off",
+    "oxc/no-accumulating-spread": "error",
+    "unicorn/prefer-set-has": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "import/no-named-as-default-member": "off",
+    "oxslop/no-banned-type-assertions": "error",
+    "oxslop/no-chained-type-assertions": "error",
+    "oxslop/no-unknown-parameters": "error",
+    "oxslop/no-unknown-returns": "error",
+    "oxslop/no-unknown-type-aliases": "error",
+    "oxslop/no-object-parameters": "error",
+    "oxslop/no-unsafe-dictionary-type": "error",
+    "oxslop/no-reflect-get": "error",
+    "oxslop/no-reflect-apply": "error",
+    "oxslop/no-conditional-empty-object-spread": "error",
+    "oxslop/no-widen-then-assert": "error",
+    "oxslop/no-known-value-widening": "error",
+    "oxslop/no-emoji": "error",
+    "oxslop/no-narration-comments": "error",
+    "oxslop/no-reexport-only-modules": "error",
+    "oxslop/no-reduce-accumulator-copy": "error",
+    "oxslop/require-readable-spacing": "error",
+    "oxslop/no-module-mocking": "error"
+  },
+  "ignorePatterns": ["dist/**", "presets/**", "node_modules/**"],
+  "jsPlugins": ["./src/index.ts"],
+  "overrides": [
+    {
+      "files": ["src/rules/no-emoji.test.ts"],
+      "rules": {
+        "oxslop/no-emoji": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.ts"],
+      "rules": {
+        "oxslop/expect-padding": "error"
+      }
+    }
+  ]
+}

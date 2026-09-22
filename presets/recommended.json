@@ -1,0 +1,46 @@
+{
+  "$schema": "../../oxlint/configuration_schema.json",
+  "jsPlugins": [
+    {
+      "name": "oxslop",
+      "specifier": "../dist/index.mjs"
+    }
+  ],
+  "rules": {
+    "oxslop/no-banned-type-assertions": "error",
+    "oxslop/no-chained-type-assertions": "error",
+    "oxslop/no-unknown-parameters": "error",
+    "oxslop/no-unknown-returns": "error",
+    "oxslop/no-unknown-type-aliases": "error",
+    "oxslop/no-object-parameters": "error",
+    "oxslop/no-unsafe-dictionary-type": "error",
+    "oxslop/no-reflect-get": "error",
+    "oxslop/no-reflect-apply": "error",
+    "oxslop/no-runtime-typeof": "error",
+    "oxslop/no-in-operator": "error",
+    "oxslop/no-conditional-empty-object-spread": "error",
+    "oxslop/no-widen-then-assert": "error",
+    "oxslop/no-known-value-widening": "error",
+    "oxslop/require-safety-comment-for-type-assertion": "error",
+    "oxslop/no-narration-comments": "error",
+    "oxslop/no-emoji": "error",
+    "oxslop/no-reexport-only-modules": "error",
+    "oxslop/no-reduce-accumulator-copy": "error",
+    "oxslop/require-readable-spacing": "error",
+    "oxslop/no-module-mocking": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**"
+      ],
+      "rules": {
+        "oxslop/expect-padding": "error"
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../oxlint/configuration_schema.json",
+  "jsPlugins": [
+    {
+      "name": "oxslop",
+      "specifier": "../dist/index.mjs"
+    }
+  ],
+  "rules": {
+    "oxslop/no-tag-access": "error",
+    "oxslop/no-manual-tagged-construction": "error",
+    "oxslop/no-nested-layer-provide": "error",
+    "oxslop/no-cascading-layer-provide": "error",
+    "oxslop/no-service-option": "error",
+    "oxslop/no-disable-validation": "error",
+    "oxslop/no-silent-error-swallow": "error",
+    "oxslop/no-yieldless-gen": "error",
+    "oxslop/prefer-effect-match": "error",
+    "oxslop/prefer-option-from-nullable": "error",
+    "oxslop/pipe-max-arguments": "error",
+    "oxslop/no-try-catch": "error",
+    "oxslop/no-switch": "error"
+  }
+}

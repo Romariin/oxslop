@@ -1,0 +1,26 @@
+{
+  "$schema": "../../oxlint/configuration_schema.json",
+  "jsPlugins": [
+    {
+      "name": "oxslop",
+      "specifier": "../dist/index.mjs"
+    }
+  ],
+  "rules": {
+    "oxslop/no-module-mocking": "error"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**"
+      ],
+      "rules": {
+        "oxslop/expect-padding": "error"
+      }
+    }
+  ]
+}

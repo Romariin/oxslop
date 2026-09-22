@@ -1,0 +1,84 @@
+{
+  "name": "oxslop",
+  "version": "0.1.0",
+  "description": "Configurable Oxlint plugin and Oxfmt preset that reject AI slop: low-evidence TypeScript, non-idiomatic Effect, and low-signal style.",
+  "keywords": [
+    "effect",
+    "lint",
+    "oxc",
+    "oxfmt",
+    "oxlint",
+    "plugin",
+    "slop",
+    "typescript"
+  ],
+  "homepage": "https://github.com/Romariin/oxslop#readme",
+  "bugs": {
+    "url": "https://github.com/Romariin/oxslop/issues"
+  },
+  "license": "MIT",
+  "author": "Romarin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Romariin/oxslop.git"
+  },
+  "files": [
+    "dist",
+    "presets",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./config": {
+      "types": "./dist/config.d.mts",
+      "import": "./dist/config.mjs"
+    },
+    "./oxfmt": {
+      "types": "./dist/oxfmt.d.mts",
+      "import": "./dist/oxfmt.mjs"
+    },
+    "./presets/*.json": "./presets/*.json",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "node --test \"src/**/*.test.ts\" \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "presets": "bun run scripts/generate-presets.ts",
+    "presets:check": "bun run scripts/generate-presets.ts --check",
+    "smoke": "node scripts/smoke.ts",
+    "check": "bun run typecheck && bun run lint && bun run fmt:check && bun run presets:check && bun run test && bun run build && bun run smoke",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "1.85.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "@types/estree": "^1.0.9",
+    "@types/node": "^26.6.2",
+    "oxfmt": "0.70.0",
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "oxlint": "1.85.0"
+  },
+  "peerDependenciesMeta": {
+    "oxlint": {
+      "optional": false
+    }
+  }
+}
