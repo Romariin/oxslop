@@ -251,8 +251,8 @@ After a successful OIDC publication, select **Settings → Publishing access →
 2. Run `bun install --frozen-lockfile` and `bun run check`.
 3. Inspect the package contents with `npm pack --dry-run`; `LICENSE`, `README.md`, `dist/` and all six JSON presets must be included.
 4. Resolve any third-party licensing questions noted below before publishing.
-5. Commit the release changes, push them, and wait for CI to pass.
-6. Push a tag matching the package version. The release workflow checks the tag, reruns validation, publishes to npm through OIDC with provenance, then creates the GitHub release.
+5. Push the release changes to a branch and open a pull request targeting `main`. Wait for CI, CodeQL and the required approval from another maintainer. Use GitHub's squash merge to produce a verified signed commit; direct pushes to `main` are not allowed.
+6. Tag the merged commit on `main` with a tag matching the package version, then push that tag. The release workflow checks the tag, reruns validation, publishes to npm through OIDC with provenance, then creates the GitHub release.
 
 Pushing a `v*` tag starts publication; do not push one merely to test the workflow.
 
