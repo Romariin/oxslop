@@ -1,7 +1,7 @@
 import { eslintCompatPlugin } from "@oxlint/plugins";
-import type { Rule } from "@oxlint/plugins";
+import type { CreateOnceRule, Rule } from "@oxlint/plugins";
 
-import { PLUGIN_NAME } from "./catalog.ts";
+import { PLUGIN_NAME, rulesInGroup } from "./catalog.ts";
 import type { RuleName } from "./catalog.ts";
 import expectPadding from "./rules/expect-padding.ts";
 import noArrayFilterMap from "./rules/no-array-filter-map.ts";
@@ -42,8 +42,9 @@ import preferEffectMatch from "./rules/prefer-effect-match.ts";
 import preferOptionFromNullable from "./rules/prefer-option-from-nullable.ts";
 import requireReadableSpacing from "./rules/require-readable-spacing.ts";
 import requireSafetyCommentForTypeAssertion from "./rules/require-safety-comment-for-type-assertion.ts";
+import { effectFilesOnly } from "./shared/effect.ts";
 
-export const rules: Record<RuleName, Rule> = {
+const implementations: Record<RuleName, CreateOnceRule> = {
   "no-banned-type-assertions": noBannedTypeAssertions,
   "no-chained-type-assertions": noChainedTypeAssertions,
   "no-unknown-parameters": noUnknownParameters,
@@ -84,6 +85,11 @@ export const rules: Record<RuleName, Rule> = {
   "no-module-mocking": noModuleMocking,
   "expect-padding": expectPadding,
 };
+
+/** Every rule, with the `effect` group restricted to modules that import Effect. */
+export const rules: Record<RuleName, Rule> = { ...implementations };
+
+for (const name of rulesInGroup("effect")) rules[name] = effectFilesOnly(implementations[name]);
 
 /** Oxlint plugin. Also loads in ESLint v9+ through `eslintCompatPlugin`. */
 const plugin = eslintCompatPlugin({ meta: { name: PLUGIN_NAME }, rules });

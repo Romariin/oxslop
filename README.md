@@ -2,7 +2,7 @@
 
 Configurable [Oxlint](https://oxc.rs/docs/guide/usage/linter) plugin and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) preset that reject AI slop: low-evidence TypeScript, non-idiomatic Effect, and low-signal style.
 
-Rules are organised in **groups** you switch on and off per project. A repo that uses Effect enables the `effect` group; one that does not, does not. Everything else stays identical across projects.
+Rules are organised in **groups** you switch on and off per project. Effect rules only run in modules that import `effect`, `effect/*` or `@effect/*` (type-only imports do not count), so they never touch plain TypeScript files. Everything else stays identical across projects.
 
 Inspired by [begone-slop](https://github.com/jliocsar/begone-slop), [anti-slop](https://github.com/dmmulroy/anti-slop) and [ai-automation](https://github.com/typeonce-dev/ai-automation). See [Credits](#credits).
 
@@ -26,7 +26,6 @@ import { oxslop } from "oxslop/config";
 export default defineConfig({
   extends: [
     oxslop({
-      effect: false, // this project does not use Effect
       rules: { "no-emoji": "warn" },
     }),
   ],
@@ -42,7 +41,7 @@ TypeScript configs need Node 22.18+/24 or Bun (`bunx --bun oxlint`).
 | Option      | Type                                           | Default                                                | Effect                                                                                                                            |
 | ----------- | ---------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | `core`      | `boolean \| "warn" \| "error"`                 | `true`                                                 | Evidence and type-safety rules.                                                                                                   |
-| `effect`    | `boolean \| "warn" \| "error" \| "auto"`       | `"auto"`                                               | Effect rules. `"auto"` enables them when the `effect` package resolves from `cwd`. Pass `false` to force off, `true` to force on. |
+| `effect`    | `boolean \| "warn" \| "error" \| "auto"`       | `"auto"`                                               | Effect rules. `"auto"` enables them when the `effect` package resolves from `cwd`. Pass `false` to force off, `true` to force on. Enabled rules only run in modules that import `effect`, `effect/*` or `@effect/*`. |
 | `style`     | `boolean \| "warn" \| "error"`                 | `true`                                                 | Signal-over-noise rules.                                                                                                          |
 | `testing`   | `boolean \| "warn" \| "error"`                 | `true`                                                 | Test-file rules. Test-only rules (`expect-padding`) are scoped through `overrides`.                                               |
 | `severity`  | `"warn" \| "error"`                            | `"error"`                                              | Severity for every enabled rule; a group set to `"warn"`/`"error"` overrides it.                                                  |
@@ -52,23 +51,7 @@ TypeScript configs need Node 22.18+/24 or Bun (`bunx --bun oxlint`).
 | `specifier` | `string`                                       | `"oxslop"`                                             | Module specifier used in `jsPlugins`. A package name or an **absolute** path (Oxlint rejects relative paths inside `extends`), e.g. `fileURLToPath(new URL("./tools/oxslop/index.ts", import.meta.url))` when vendoring. |
 | `cwd`       | `string`                                       | `process.cwd()`                                        | Directory used for Effect auto-detection.                                                                                         |
 
-Monorepo with mixed packages: put one `oxlint.config.ts` per package (Oxlint uses the nearest config) or use `overrides`:
-
-```ts
-export default defineConfig({
-  extends: [oxslop({ effect: false })],
-  overrides: [
-    {
-      files: ["packages/effect-*/**"],
-      rules: Object.fromEntries(
-        Object.entries(
-          oxslop({ core: false, style: false, testing: false, effect: true }).rules ?? {},
-        ),
-      ),
-    },
-  ],
-});
-```
+Monorepos where only some packages or files use Effect need no overrides: with `"auto"` (enabled when `effect` resolves from `cwd`), Effect rules check modules that import `effect`, `effect/*` or `@effect/*` and skip the rest. A type-only import (`import type { Effect } from "effect"`) does not opt a module in.
 
 ### `.oxlintrc.json`
 
@@ -78,7 +61,7 @@ JSON configs cannot import packages, so `oxslop` ships static presets. `extends`
 {
   "extends": [
     "./node_modules/oxslop/presets/recommended.json", // core + style + testing
-    "./node_modules/oxslop/presets/effect.json", // add only in Effect projects
+    "./node_modules/oxslop/presets/effect.json", // only runs in modules that import Effect
   ],
   "rules": {
     "oxslop/no-emoji": "warn",

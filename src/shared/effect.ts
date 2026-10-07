@@ -1,4 +1,4 @@
-import type { Context, ESTree, Scope } from "@oxlint/plugins";
+import type { Context, CreateOnceRule, ESTree, Scope } from "@oxlint/plugins";
 
 import { staticMemberName } from "./globals.ts";
 
@@ -196,3 +196,38 @@ export const isPipeCall = (context: Context, node: ESTree.CallExpression): boole
 
   return (imported.type === "Identifier" ? imported.name : imported.value) === "pipe";
 };
+
+const isEffectModule = (source: string): boolean =>
+  source === "effect" || source.startsWith("effect/") || source.startsWith("@effect/");
+
+const isTypeOnlyImport = (declaration: ESTree.ImportDeclaration): boolean =>
+  declaration.importKind === "type" ||
+  (declaration.specifiers.length > 0 &&
+    declaration.specifiers.every(
+      (specifier) => specifier.type === "ImportSpecifier" && specifier.importKind === "type",
+    ));
+
+/** `true` when the module has a value import from `effect`, `effect/*` or `@effect/*`. */
+export const importsEffect = (program: ESTree.Program): boolean =>
+  program.body.some(
+    (statement) =>
+      statement.type === "ImportDeclaration" &&
+      isEffectModule(statement.source.value) &&
+      !isTypeOnlyImport(statement),
+  );
+
+/**
+ * Restrict a rule to modules that import Effect. The file check runs in `before()`, ahead of the
+ * rule's own `before()`, so files without Effect imports are skipped entirely.
+ */
+export const effectFilesOnly = (rule: CreateOnceRule): CreateOnceRule => ({
+  ...rule,
+  createOnce(context) {
+    const visitor = rule.createOnce(context);
+
+    return {
+      ...visitor,
+      before: () => importsEffect(context.sourceCode.ast) && visitor.before?.() !== false,
+    };
+  },
+});
