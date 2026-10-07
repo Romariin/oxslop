@@ -1,11 +1,11 @@
-import { defineRule } from "@oxlint/plugins";
-import type { Context, ESTree, Rule } from "@oxlint/plugins";
+import type { Context, CreateOnceRule, ESTree, Rule } from "@oxlint/plugins";
 
-export type { Context, ESTree, Rule };
+export type { Context, CreateOnceRule, ESTree, Rule };
 
 export type Node = ESTree.Node;
 
-export { defineRule };
+/** Every oxslop rule uses `createOnce`, so plugin-level wrappers can compose its visitor hooks. */
+export const defineRule = (rule: CreateOnceRule): CreateOnceRule => rule;
 
 /**
  * Reads the first options object of a rule, merged over `defaults`.

@@ -21,7 +21,7 @@ export interface OxslopOptions {
   core?: GroupSetting;
   /**
    * Effect rules. Default `"auto"`: enabled when the `effect` package resolves from `cwd`.
-   * Pass `false` for projects that do not use Effect.
+   * Enabled rules only run in modules that import `effect`, `effect/*` or `@effect/*`.
    */
   effect?: GroupSetting | "auto";
   /** Signal-over-noise style rules. Default `true`. */

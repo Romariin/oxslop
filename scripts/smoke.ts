@@ -2,9 +2,9 @@
  * End-to-end check of the built package as a consumer sees it.
  *
  * Creates a temp project whose `node_modules/oxslop` links to this repo, then runs the real
- * `oxlint` binary twice: once with `oxlint.config.ts` + `oxslop()` and once with `.oxlintrc.json`
- * + JSON presets. Asserts the expected rule ids fire and that `effect: false` removes Effect rules.
- * Requires `bun run build` first.
+ * `oxlint` binary with `oxlint.config.ts` + `oxslop()` and with `.oxlintrc.json` + JSON presets.
+ * Asserts the expected rule ids fire, that `effect: false` removes Effect rules, and that Effect
+ * rules skip modules without Effect imports. Requires `bun run build` first.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -109,6 +109,11 @@ writeFileSync(
 );
 
 expectRules(lint(), [...CORE, ...EFFECT], []);
+
+// 4. Same presets, module without Effect imports: Effect rules skip the file.
+writeFileSync(join(dir, "src.ts"), SOURCE.replace('import { Effect } from "effect";\n', ""));
+
+expectRules(lint(), CORE, EFFECT);
 
 rmSync(dir, { recursive: true, force: true });
 
